@@ -1,0 +1,27 @@
+{
+  "name": "codebolt-resume-analyzer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:vercel": "node ./scripts/dev-vercel.mjs",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.22",
+    "cross-env": "^10.1.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.15",
+    "vite": "^7.2.4"
+  },
+  "dependencies": {
+    "firebase": "^12.6.0",
+    "firebase-admin": "^13.0.2",
+    "openai": "^6.10.0",
+    "pdfjs-dist": "^5.4.449",
+    "react-router-dom": "^7.10.1"
+  }
+}

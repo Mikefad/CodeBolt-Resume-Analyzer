@@ -1,0 +1,4 @@
+.vercel
+codebolt-resume-analyzer/.env
+codebolt-resume-analyzer/.env.local
+codebolt-resume-analyzer/.env.*.local
