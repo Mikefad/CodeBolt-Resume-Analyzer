@@ -9,10 +9,12 @@ import {
 import { db } from './firebase.js';
 
 export const FREE_ANALYSIS_LIMIT = 3;
+export const FREE_CV_LIMIT = 2;
 
 function normalizeUsage(data = {}) {
   return {
     analysesUsed: data.analysesUsed ?? 0,
+    cvsUsed: data.cvsUsed ?? 0,
     premium: Boolean(data.premium),
   };
 }
@@ -23,6 +25,7 @@ async function ensureUsageDoc(userId) {
   if (!snapshot.exists()) {
     await setDoc(ref, {
       analysesUsed: 0,
+      cvsUsed: 0,
       premium: false,
       updatedAt: serverTimestamp(),
     });
@@ -40,6 +43,17 @@ export async function incrementUsageCount(userId) {
   await ensureUsageDoc(userId);
   await updateDoc(ref, {
     analysesUsed: increment(1),
+    updatedAt: serverTimestamp(),
+  });
+  const snapshot = await getDoc(ref);
+  return normalizeUsage(snapshot.data());
+}
+
+export async function incrementCvCount(userId) {
+  const ref = doc(db, 'usage', userId);
+  await ensureUsageDoc(userId);
+  await updateDoc(ref, {
+    cvsUsed: increment(1),
     updatedAt: serverTimestamp(),
   });
   const snapshot = await getDoc(ref);

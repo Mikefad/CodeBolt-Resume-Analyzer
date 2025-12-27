@@ -27,3 +27,18 @@ export async function verifyPayment(payload) {
 
   return response.json();
 }
+
+export async function generateResume(payload) {
+  const response = await fetch('/api/generateResume', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error?.error ?? 'Failed to generate tailored resume');
+  }
+
+  return response.json();
+}

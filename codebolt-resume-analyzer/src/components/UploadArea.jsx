@@ -125,13 +125,12 @@ export default function UploadArea({
         </div>
         <div>
           <label htmlFor="job-description" className="text-sm font-medium text-slate-700">
-            Job description keywords (optional)
+            Job description (optional)
           </label>
-          <input
+          <textarea
             id="job-description"
-            type="text"
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-            placeholder="Paste key responsibilities or technologies"
+            className="mt-2 min-h-[180px] w-full resize-y rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+            placeholder="Enter job description"
             value={jobDescription}
             onChange={event => onJobDescriptionChange(event.target.value)}
           />

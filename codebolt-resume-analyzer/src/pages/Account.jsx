@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import AppShell from '../components/AppShell.jsx';
 import PaystackButton from '../components/PaystackButton.jsx';
 import { useAuth } from '../lib/auth.jsx';
-import { fetchUsageStatus, FREE_ANALYSIS_LIMIT } from '../lib/usage.js';
+import { fetchUsageStatus, FREE_ANALYSIS_LIMIT, FREE_CV_LIMIT } from '../lib/usage.js';
 import { formatNaira, PREMIUM_PRICE_NGN } from '../lib/payments.js';
 
 export default function Account() {
   const { user } = useAuth();
   const [usageCount, setUsageCount] = useState(0);
+  const [cvCount, setCvCount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [usageError, setUsageError] = useState('');
@@ -18,9 +19,10 @@ export default function Account() {
     let isMounted = true;
     setIsLoading(true);
     fetchUsageStatus(user.uid)
-      .then(({ analysesUsed, premium }) => {
+      .then(({ analysesUsed, cvsUsed, premium }) => {
         if (isMounted) {
           setUsageCount(analysesUsed);
+          setCvCount(cvsUsed);
           setIsPremium(premium);
           setUsageError('');
         }
@@ -49,6 +51,7 @@ export default function Account() {
     try {
       const updated = await fetchUsageStatus(user.uid);
       setUsageCount(updated.analysesUsed);
+      setCvCount(updated.cvsUsed);
       setIsPremium(updated.premium);
       setPaymentInfo({ text: 'Premium activated successfully.', tone: 'success' });
     } catch (error) {
@@ -63,7 +66,7 @@ export default function Account() {
   return (
     <AppShell
       heading="Account"
-      subheading="Manage your profile details and track how many resume analyses you have used."
+      subheading="Manage your profile details and track how many resume analyses and CV drafts you have used."
     >
       <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
         <dl className="grid gap-8 md:grid-cols-2">
@@ -78,6 +81,12 @@ export default function Account() {
               {isLoading ? 'Loading…' : `${usageCount} / ${FREE_ANALYSIS_LIMIT}`}
             </dd>
             {usageError ? <p className="mt-1 text-xs text-rose-500">{usageError}</p> : null}
+          </div>
+          <div>
+            <dt className="text-sm text-slate-500">CV drafts used</dt>
+            <dd className="mt-1 text-xl font-semibold text-slate-900">
+              {isLoading ? 'Loading.' : `${cvCount} / ${FREE_CV_LIMIT}`}
+            </dd>
           </div>
           <div>
             <dt className="text-sm text-slate-500">Plan</dt>

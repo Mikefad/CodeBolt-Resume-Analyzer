@@ -9,10 +9,10 @@ export default function AppShell({ children, heading, subheading }) {
       </div>
       <div className="relative z-10 flex min-h-screen flex-col">
         <Navbar />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
+        <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10">
           {heading ? (
             <div className="mb-8">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-200">CodeBolt Resume Analyzer</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-indigo-200">CodeBolt Resume Studio</p>
               <h1 className="mt-3 text-3xl font-bold text-white">{heading}</h1>
               {subheading ? <p className="mt-2 text-sm text-slate-300">{subheading}</p> : null}
             </div>

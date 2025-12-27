@@ -1,6 +1,6 @@
 ## no-op commit
 
-## CodeBolt Resume Analyzer
+## CodeBolt Resume Studio
 
 AI-powered resume feedback tailored for international students and early-career technologists. Upload a PDF or paste your resume, add optional job context, and get a structured analysis (score, strengths, weaknesses, keywords, improvements) from OpenAI. Firebase Authentication protects the dashboard, and Firestore tracks a free allowance of three analyses per user.
 

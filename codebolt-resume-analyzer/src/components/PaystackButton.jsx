@@ -308,7 +308,7 @@ export default function PaystackButton({
       amount: amountKobo,
       currency,
       ref: reference,
-      label: 'CodeBolt Resume Analyzer',
+      label: 'CodeBolt Resume Studio',
       metadata: {
         custom_fields: [
           {

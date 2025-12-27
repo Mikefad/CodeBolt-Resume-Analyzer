@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '../components/AppShell.jsx';
 import UploadArea from '../components/UploadArea.jsx';
 import AnalysisResult from '../components/AnalysisResult.jsx';
+import ResumeTemplate, { buildResumePrintHtml } from '../components/ResumeTemplate.jsx';
 import PaystackButton from '../components/PaystackButton.jsx';
 import { extractTextFromPdf } from '../lib/pdf.js';
-import { analyzeResume } from '../lib/api.js';
+import { analyzeResume, generateResume } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
 import {
   fetchUsageStatus,
   incrementUsageCount,
   FREE_ANALYSIS_LIMIT,
+  FREE_CV_LIMIT,
+  incrementCvCount,
 } from '../lib/usage.js';
 import { formatNaira, PREMIUM_PRICE_NGN } from '../lib/payments.js';
 
@@ -26,6 +29,38 @@ const summarizeText = text => {
   };
 };
 
+const emptyResume = {
+  fullName: '',
+  headline: '',
+  contact: { email: '', phone: '', location: '', links: [] },
+  summary: '',
+  skills: [],
+  experience: [],
+  education: [],
+  certifications: [],
+  projects: [],
+};
+
+function normalizeResumeData(raw) {
+  if (!raw || typeof raw !== 'object') return emptyResume;
+  return {
+    fullName: raw.fullName ?? '',
+    headline: raw.headline ?? '',
+    contact: {
+      email: raw.contact?.email ?? '',
+      phone: raw.contact?.phone ?? '',
+      location: raw.contact?.location ?? '',
+      links: Array.isArray(raw.contact?.links) ? raw.contact.links : [],
+    },
+    summary: raw.summary ?? '',
+    skills: Array.isArray(raw.skills) ? raw.skills : [],
+    experience: Array.isArray(raw.experience) ? raw.experience : [],
+    education: Array.isArray(raw.education) ? raw.education : [],
+    certifications: Array.isArray(raw.certifications) ? raw.certifications : [],
+    projects: Array.isArray(raw.projects) ? raw.projects : [],
+  };
+}
+
 export default function Dashboard() {
   const { user } = useAuth();
 
@@ -41,7 +76,12 @@ export default function Dashboard() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState('');
 
+  const [generatedResume, setGeneratedResume] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState('');
+
   const [usageCount, setUsageCount] = useState(0);
+  const [cvCount, setCvCount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
   const [isUsageLoading, setIsUsageLoading] = useState(true);
   const [usageError, setUsageError] = useState('');
@@ -53,9 +93,10 @@ export default function Dashboard() {
     setIsUsageLoading(true);
 
     fetchUsageStatus(user.uid)
-      .then(({ analysesUsed, premium }) => {
+      .then(({ analysesUsed, cvsUsed, premium }) => {
         if (isMounted) {
             setUsageCount(analysesUsed);
+            setCvCount(cvsUsed);
             setIsPremium(premium);
           setUsageError('');
         }
@@ -139,6 +180,7 @@ export default function Dashboard() {
         try {
           const updated = await incrementUsageCount(user.uid);
           setUsageCount(updated.analysesUsed);
+          setCvCount(updated.cvsUsed);
           setIsPremium(updated.premium);
         } catch (usageUpdateError) {
           console.error('Failed to update usage', usageUpdateError);
@@ -150,6 +192,73 @@ export default function Dashboard() {
     } finally {
       setIsAnalyzing(false);
     }
+  }
+
+  async function handleGenerateResume() {
+    if (isUsageLoading) {
+      setGenerateError('Checking your remaining free analyses. Please try again in a moment.');
+      return;
+    }
+
+    if (!isPremium && cvCount >= FREE_CV_LIMIT) {
+      setGenerateError('You have used all free CV drafts. Unlock full reports for unlimited access.');
+      return;
+    }
+
+    if (!resumeText || resumeText.trim().length < 200) {
+      setGenerateError('Please provide at least a few sentences of resume content before generating.');
+      return;
+    }
+
+    if (!jobTitle && !jobDescription) {
+      setGenerateError('Add a target job title or description so we can tailor your CV.');
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerateError('');
+    try {
+      const result = await generateResume({
+        resumeText,
+        jobTitle: jobTitle || undefined,
+        jobDescription: jobDescription || undefined,
+        userId: user?.uid,
+      });
+      setGeneratedResume(normalizeResumeData(result));
+
+      if (user?.uid && !isPremium) {
+        try {
+          const updated = await incrementCvCount(user.uid);
+          setUsageCount(updated.analysesUsed);
+          setCvCount(updated.cvsUsed);
+          setIsPremium(updated.premium);
+        } catch (usageUpdateError) {
+          console.error('Failed to update usage', usageUpdateError);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setGenerateError(error.message);
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  function handleDownloadResume() {
+    if (!generatedResume) return;
+    const html = buildResumePrintHtml(generatedResume);
+    const previewWindow = window.open('', '_blank', 'width=900,height=1200');
+    if (!previewWindow) {
+      setGenerateError('Pop-up blocked. Please allow pop-ups to download your CV.');
+      return;
+    }
+    previewWindow.document.open();
+    previewWindow.document.write(html);
+    previewWindow.document.close();
+    previewWindow.focus();
+    previewWindow.onload = () => {
+      previewWindow.print();
+    };
   }
 
   const textStats = useMemo(() => summarizeText(resumeText), [resumeText]);
@@ -178,10 +287,10 @@ export default function Dashboard() {
 
   return (
     <AppShell
-      heading="Resume Analyzer"
-      subheading="Upload your resume on the left, add optional job context, then run the AI analysis."
+      heading="Resume Studio"
+      subheading="Upload your resume on the left, add optional job context, then analyze or generate a tailored CV."
     >
-      <div className="grid gap-8 md:grid-cols-2 items-start">
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] items-start">
         <UploadArea
           selectedFile={selectedFile}
           onFileSelected={handleFileSelected}
@@ -211,7 +320,7 @@ export default function Dashboard() {
           isUsageLoading={isUsageLoading}
         />
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-8">
           <section className="rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-sm">
             <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Resume stats</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -260,6 +369,54 @@ export default function Dashboard() {
                   {paymentMessage.text}
                 </p>
               ) : null}
+            </section>
+          ) : null}
+
+          <section className="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Tailored CV Builder</p>
+            <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
+              <div className="min-w-[220px] flex-1">
+                <h3 className="text-2xl font-semibold text-slate-900">Generate a modern CV draft</h3>
+                <p className="mt-2 text-sm text-slate-600">
+                  Use your resume details plus a target job description to draft a modern, one-page CV that matches the
+                  role. Review the layout and download as a PDF when ready.
+                </p>
+                <p className="mt-3 text-xs text-slate-500">
+                  {isPremium
+                    ? 'Premium unlocked: generate unlimited CV drafts.'
+                    : `Free CV drafts used: ${cvCount}/${FREE_CV_LIMIT}.`}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={handleGenerateResume}
+                  disabled={isGenerating || isUsageLoading}
+                  className="rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isGenerating ? 'Generating CV...' : 'Generate Tailored CV'}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadResume}
+                  disabled={!generatedResume}
+                  className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-800 shadow-sm transition hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Download PDF
+                </button>
+              </div>
+            </div>
+            {generateError ? <p className="mt-3 text-sm text-rose-500">{generateError}</p> : null}
+          </section>
+
+          {generatedResume ? (
+            <section className="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Generated CV Preview</p>
+              <div className="mt-5 overflow-hidden rounded-2xl">
+                <div className="origin-top-left scale-[0.96]">
+                  <ResumeTemplate data={generatedResume} />
+                </div>
+              </div>
             </section>
           ) : null}
 

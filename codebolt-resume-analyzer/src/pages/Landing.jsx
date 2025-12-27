@@ -6,8 +6,8 @@ const steps = [
     body: 'Drop in a PDF or paste your resume text. We extract everything client-side for privacy.',
   },
   {
-    title: 'AI review in seconds',
-    body: 'GPT-4o mini analyzes structure, keywords, and clarity with an international-student lens.',
+    title: 'AI review + tailored CV',
+    body: 'GPT-4o mini analyzes structure, keywords, and clarity and drafts a modern CV aligned to the role.',
   },
   {
     title: 'Actionable roadmap',
@@ -33,7 +33,7 @@ const personas = [
 const faqs = [
   {
     q: 'Is CodeBolt really free to start?',
-    a: 'Yes. Every account gets three full analyses for free. We will add an optional $5 premium tier later.',
+    a: 'Yes. Every account gets three full analyses for free, plus the CV builder to start drafting immediately.',
   },
   {
     q: 'Do I need a perfect resume format?',
@@ -67,14 +67,14 @@ export default function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 pb-24 pt-20 lg:flex-row lg:items-center">
           <div className="flex-1 text-center lg:text-left">
             <p className="inline-flex items-center rounded-full border border-white/20 px-4 py-1 text-xs uppercase tracking-[0.3em] text-indigo-100">
-              CodeBolt Resume Analyzer
+              CodeBolt Resume Studio
             </p>
             <h1 className="mt-6 text-4xl font-semibold leading-tight text-white sm:text-5xl lg:text-6xl">
-              AI resume reviews for the next wave of international tech talent
+              AI resume reviews and tailored CVs for the next wave of international tech talent
             </h1>
             <p className="mt-6 text-lg text-slate-200">
-              Get personalized feedback, keyword matching, and a trusted score in under a minute. Built for students,
-              junior engineers, and anyone making the jump into tech.
+              Get personalized feedback, keyword matching, and a tailored CV draft in under a minute. Built for
+              students, junior engineers, and anyone making the jump into tech.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-4 lg:justify-start">
               <Link
@@ -169,7 +169,7 @@ export default function Landing() {
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
-                Three free analyses so you can iterate before applying.
+                Generate a modern CV draft you can polish in minutes.
               </li>
             </ul>
           </div>
@@ -191,7 +191,7 @@ export default function Landing() {
 
       <footer className="relative border-t border-white/10 bg-slate-950/80">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-slate-300 sm:flex-row">
-          <p>&copy; {new Date().getFullYear()} CodeBolt Resume Analyzer</p>
+          <p>&copy; {new Date().getFullYear()} CodeBolt Resume Studio</p>
           <div className="flex gap-6">
             <Link to="/login" className="hover:text-white">
               Login
